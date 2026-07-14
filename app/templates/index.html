@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SignSpeak AI</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='images/app_icon.svg') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.47.0/iconfont/tabler-icons.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body data-theme="dark">
+
+    <nav class="top-toolbar">
+        <div class="app-brand">
+            <img src="{{ url_for('static', filename='images/app_icon.svg') }}" alt="SignSpeak AI" class="app-icon">
+        </div>
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="tabLive"><i class="ti ti-camera"></i>Live Translate</button>
+            <button class="tab-btn" data-tab="tabVideo"><i class="ti ti-video"></i>Video Upload</button>
+            <button class="tab-btn" data-tab="tabPractice"><i class="ti ti-target-arrow"></i>Practice Mode</button>
+            <button class="tab-btn" data-tab="tabMacros"><i class="ti ti-bolt"></i>Macros</button>
+            <button class="tab-btn" data-tab="tabHistory"><i class="ti ti-clock"></i>History</button>
+            <button class="tab-btn" data-tab="tabData"><i class="ti ti-tools"></i>Data Tools</button>
+        </div>
+        <div class="toolbar-actions">
+            <button id="gestureGuideBtn" title="Gesture Guide" aria-label="Gesture Guide"><i class="ti ti-book"></i></button>
+            <button id="themeToggleBtn" title="Toggle Theme" aria-label="Toggle Theme"><i class="ti ti-moon"></i></button>
+        </div>
+    </nav>
+
+    <main class="app-body">
+
+        <!-- ===================== LIVE TRANSLATE TAB ===================== -->
+        <section id="tabLive" class="tab-panel active">
+            <div class="camera-hero">
+                <div class="camera-container">
+                    <video id="webcam" autoplay playsinline></video>
+                    <canvas id="overlay"></canvas>
+
+                    <div class="caption-strip">
+                        <p id="sentenceText" class="sentence-box">&nbsp;</p>
+                    </div>
+
+                    <div class="hud-strip">
+                        <div class="hud-hand" id="hand1Box">
+                            <i class="ti ti-hand-stop hud-icon" id="hand1Icon"></i>
+                            <div class="hud-info">
+                                <span class="hud-name" id="hand1Text">-</span>
+                                <div class="confidence-bar-track">
+                                    <div class="confidence-bar-fill" id="hand1ConfBar"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="hud-hand" id="hand2Box">
+                            <i class="ti ti-hand-stop hud-icon" id="hand2Icon"></i>
+                            <div class="hud-info">
+                                <span class="hud-name" id="hand2Text">-</span>
+                                <div class="confidence-bar-track">
+                                    <div class="confidence-bar-fill" id="hand2ConfBar"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls-row">
+                <button id="startCameraBtn"><i class="ti ti-player-play"></i> Start Camera</button>
+                <button id="stopCameraBtn"><i class="ti ti-player-stop"></i> Stop Camera</button>
+            </div>
+
+            <div class="controls-row">
+                <span class="voice-label">Voice:</span>
+                <button id="maleVoiceBtn"><i class="ti ti-gender-male"></i> Male</button>
+                <button id="femaleVoiceBtn"><i class="ti ti-gender-female"></i> Female</button>
+            </div>
+
+            <div class="controls-row">
+                <button id="clearBtn"><i class="ti ti-trash"></i> Clear</button>
+                <button id="speakBtn"><i class="ti ti-volume"></i> Speak</button>
+                <button id="exportTranscriptBtn"><i class="ti ti-download"></i> Download Transcript</button>
+            </div>
+
+            <div class="controls-row translate-row">
+                <select id="translateLangSelect">
+                    <option value="hi">Hindi</option>
+                    <option value="es">Spanish</option>
+                    <option value="fr">French</option>
+                    <option value="de">German</option>
+                    <option value="ja">Japanese</option>
+                    <option value="ar">Arabic</option>
+                </select>
+                <button id="translateSpeakBtn"><i class="ti ti-language"></i> Translate &amp; Speak</button>
+            </div>
+            <p id="translatedResultText" class="sentence-box translate-result">&nbsp;</p>
+        </section>
+
+        <!-- ===================== VIDEO UPLOAD TAB ===================== -->
+        <section id="tabVideo" class="tab-panel">
+            <div class="panel-card">
+                <h3>Translate a Pre-Recorded Video</h3>
+                <input type="file" id="videoFileInput" accept="video/*">
+                <button id="processVideoBtn" disabled><i class="ti ti-player-play"></i> Process Video</button>
+
+                <p id="videoStatusText">Upload a video to begin.</p>
+
+                <div class="progress-bar-track">
+                    <div class="progress-bar-fill" id="videoProgressBarFill"></div>
+                </div>
+
+                <video id="uploadedVideo" style="display:none;" playsinline></video>
+
+                <p id="videoResultText" class="sentence-box">&nbsp;</p>
+                <button id="speakVideoResultBtn"><i class="ti ti-volume"></i> Speak Result</button>
+            </div>
+        </section>
+
+        <!-- ===================== PRACTICE MODE TAB ===================== -->
+        <section id="tabPractice" class="tab-panel">
+            <div class="practice-card">
+                <h3>Practice Mode</h3>
+                <p class="practice-instructions">
+                    The app will pick a random gesture. Show it to the camera to score a point.
+                </p>
+
+                <div class="practice-target" id="practiceTarget">
+                    <i class="ti ti-hand-stop practice-icon" id="practiceIcon"></i>
+                    <span class="practice-name" id="practiceGestureText">Press Start</span>
+                </div>
+
+                <p id="practiceFeedbackText" class="practice-feedback">&nbsp;</p>
+                <p class="practice-score">Score: <span id="practiceScoreText">0</span></p>
+
+                <button id="practiceStartBtn"><i class="ti ti-player-play"></i> Start Practice</button>
+                <button id="practiceNextBtn" disabled><i class="ti ti-player-skip-forward"></i> Skip Gesture</button>
+            </div>
+        </section>
+
+        <!-- ===================== MACROS TAB ===================== -->
+        <section id="tabMacros" class="tab-panel">
+            <div class="panel-card">
+                <h3>Create a Gesture Macro</h3>
+                <p class="empty-note">Chain a sequence of gestures into a custom phrase — e.g. OK → Peace could mean "I am fine".</p>
+
+                <select id="macroGestureSelect"></select>
+                <button id="macroAddToSeqBtn"><i class="ti ti-plus"></i> Add to Sequence</button>
+                <button id="macroClearSeqBtn"><i class="ti ti-x"></i> Clear Sequence</button>
+
+                <p><strong>Sequence:</strong></p>
+                <div id="macroSequenceDisplay" class="macro-sequence-display"></div>
+
+                <input type="text" id="macroPhraseInput" placeholder="Phrase to speak/type when this sequence is shown">
+                <button id="macroSaveBtn"><i class="ti ti-device-floppy"></i> Save Macro</button>
+            </div>
+
+            <div class="panel-card">
+                <h3>Saved Macros</h3>
+                <div id="macroList"></div>
+            </div>
+        </section>
+
+        <!-- ===================== HISTORY TAB ===================== -->
+        <section id="tabHistory" class="tab-panel">
+            <div class="panel-card">
+                <h3>Session History</h3>
+                <div id="historyList" class="history-list">
+                    <p class="empty-note">Nothing recognized yet this session.</p>
+                </div>
+            </div>
+
+            <div class="panel-card">
+                <h3>Confidence Analytics</h3>
+                <div id="analyticsTable" class="analytics-table">
+                    <p class="empty-note">No data yet this session.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================== DATA COLLECTION TAB (dev tool) ===================== -->
+        <section id="tabData" class="tab-panel">
+            <div class="panel-card">
+                <h3>Gesture Data Collection (Developer Tool)</h3>
+                <input type="text" id="labelInput" placeholder="Gesture label (e.g. A, Hello)">
+                <button id="saveCsvBtn"><i class="ti ti-download"></i> Save Samples to CSV</button>
+                <p>Samples collected this session: <span id="sampleCount">0</span></p>
+                <p><em>Hold SPACEBAR while showing the gesture to capture samples.</em></p>
+            </div>
+
+            <div class="panel-card">
+                <h3>Correct Last Gesture (Active Learning)</h3>
+                <p class="empty-note">If the model got something wrong, flag it here — corrections export in the same format as training data.</p>
+                <p><strong>Last detected:</strong> <span id="correctionLastLabel">-</span></p>
+                <select id="correctionSelect"></select>
+                <button id="correctionSubmitBtn"><i class="ti ti-check"></i> Submit Correction</button>
+                <p>Corrections recorded: <span id="correctionCount">0</span></p>
+                <button id="correctionDownloadBtn"><i class="ti ti-download"></i> Download Corrections CSV</button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Gesture Guide Modal -->
+    <div id="gestureGuideModal" class="modal-overlay">
+        <div class="modal-box modal-box-wide">
+            <div class="modal-header">
+                <h3>Supported Gestures</h3>
+                <button id="closeGuideBtn" aria-label="Close"><i class="ti ti-x"></i></button>
+            </div>
+            <img src="{{ url_for('static', filename='images/gesture_guide.png') }}" alt="Sign language gesture guide showing all supported gestures with labels" class="gesture-guide-image">
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+
+    <script src="{{ url_for('static', filename='js/gestures.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/tabs.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/reference_guide.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/macros.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/corrections.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/translate.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/camera.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/video_upload.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/practice_mode.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/history_panel.js') }}"></script>
+</body>
+</html>
