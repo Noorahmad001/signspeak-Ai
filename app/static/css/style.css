@@ -652,3 +652,16 @@ button.active-voice {
 .macro-arrow {
     margin: 0 0.3rem;
 }
+.guide-text-btn {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--accent-active);
+}
+
+.guide-text-btn:hover {
+    background: var(--btn-hover);
+    color: var(--accent-active);
+}
